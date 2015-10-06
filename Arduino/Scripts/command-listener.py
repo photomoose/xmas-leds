@@ -57,11 +57,11 @@ try:
 			cmd = json.loads(msg.body)		
 			logger.debug(cmd)
 
-			path = str(cmd["r"]) + "," + str(cmd["g"]) + "," + str(cmd["b"])
+			path = str(cmd["Red"]) + "," + str(cmd["Green"]) + "," + str(cmd["Blue"])
 
 			urllib2.urlopen('http://localhost/mailbox/' + path)
 
-		msg.delete()
+			msg.delete()
 
 except Exception as e:
 	logger.error('Error: ' + traceback.format_exc())
