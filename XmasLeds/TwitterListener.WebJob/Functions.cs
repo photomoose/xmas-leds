@@ -24,10 +24,10 @@ namespace TwitterListener.WebJob
             _factory = MessagingFactory.CreateFromConnectionString(connectionString);
             
             var credentials = new TwitterCredentials(
-                "51Xm7YboVAcVIPB6ppBNcCeGC",
-                "VCfto1iyxzrAEzyr1vG3AbnqWgMB4SJRyWm6itiVaHuKqGXKn9",
-                "3881153422-w1gNQ0NsOYR4l84VHVyvI8RnRhtfu6fBz8uoRmR",
-                "dV2ORE1gx3zf5ohvvCtvKDmMLyWsrfRmftI1bsIKNUfdZ");
+                ConfigurationManager.AppSettings["TwitterConsumerKey"],
+                ConfigurationManager.AppSettings["TwitterConsumerSecret"],
+                ConfigurationManager.AppSettings["TwitterAccessToken"],
+                ConfigurationManager.AppSettings["TwitterAccessTokenSecret"]);
 
             Auth.SetCredentials(credentials);
 
