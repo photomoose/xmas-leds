@@ -1,0 +1,15 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+start() {
+        echo "Starting Durry Lights..."
+        python /usr/local/sbin/durrylights/durrylights.py &
+        echo "Started Durry Lights"
+}
+
+stop() {
+        pid=$(ps | grep '[p]ython /usr/local/sbin/durrylights/durrylights.py' | awk '{ print $1 }')
+        echo "Stopping Durry Lights..."
+        kill $pid
+        echo "Stopped Durry Lights"
+}
