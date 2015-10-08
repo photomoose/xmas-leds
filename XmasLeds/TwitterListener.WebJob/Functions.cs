@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Configuration;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Azure.WebJobs;
 using Microsoft.ServiceBus.Messaging;
-using Newtonsoft.Json;
 using Rumr.DurryLights.Domain;
+using Rumr.DurryLights.ServiceBus;
 using Tweetinvi;
 using Tweetinvi.Core.Credentials;
 using Tweetinvi.Core.Events.EventArguments;
@@ -16,14 +15,14 @@ namespace TwitterListener.WebJob
 {
     public class Functions
     {
-        private static MessagingFactory _factory;
+        private static IBusPublisher _busPublisher;
 
         [NoAutomaticTrigger]
         public async static void ListenForTweetsAsync(TextWriter log)
         {
             var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
-            _factory = MessagingFactory.CreateFromConnectionString(connectionString);
-            
+            _busPublisher = new BusPublisher(connectionString);
+
             var credentials = new TwitterCredentials(
                 ConfigurationManager.AppSettings["TwitterConsumerKey"],
                 ConfigurationManager.AppSettings["TwitterConsumerSecret"],
@@ -53,12 +52,7 @@ namespace TwitterListener.WebJob
                     Blue = int.Parse(matches.Groups[3].Value)
                 };
 
-                var topicClient = _factory.CreateTopicClient("Commands");
-
-                var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(colourRequest)));
-                var brokeredMessage = new BrokeredMessage(json);
-
-                topicClient.Send(brokeredMessage);
+                await _busPublisher.PublishAsync(colourRequest);
 
                 Tweet.PublishTweetInReplyTo(string.Format("@{0} Thanks for your request!", e.Tweet.CreatedBy.ScreenName), e.Tweet);
             }
