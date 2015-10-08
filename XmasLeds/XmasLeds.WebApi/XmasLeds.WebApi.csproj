@@ -40,14 +40,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.ServiceBus, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\WindowsAzure.ServiceBus.3.0.3\lib\net45-full\Microsoft.ServiceBus.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Configuration, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.3.1.0\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
-    </Reference>
     <Reference Include="RestSharp">
       <HintPath>..\packages\RestSharp.105.2.2\lib\net451\RestSharp.dll</HintPath>
     </Reference>
@@ -147,7 +139,16 @@
       <DependentUpon>Web.config</DependentUpon>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\DurryLights.Domain\DurryLights.Domain.csproj">
+      <Project>{1F8BDD17-9C71-436C-A5EB-9CA78C2D49EF}</Project>
+      <Name>DurryLights.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DurryLights.ServiceBus\DurryLights.ServiceBus.csproj">
+      <Project>{11B6364D-C953-4E62-BD21-7E7664D46D30}</Project>
+      <Name>DurryLights.ServiceBus</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
   </ItemGroup>

@@ -1,49 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
+﻿using System.Configuration;
+using System.Threading.Tasks;
 using System.Web.Http;
-using Microsoft.ServiceBus.Messaging;
-using Newtonsoft.Json;
+using Rumr.DurryLights.Domain;
+using Rumr.DurryLights.ServiceBus;
 
 namespace XmasLeds.WebApi.Controllers
 {
     public class LedsController : ApiController
     {
-        private MessagingFactory _factory;
+        private readonly IBusPublisher _busPublisher;
 
         public LedsController()
         {
             var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
-            _factory = MessagingFactory.CreateFromConnectionString(connectionString);
+            _busPublisher = new BusPublisher(connectionString);
         }
 
-        public IHttpActionResult Post([FromBody]ColourRequest colourRequest)
+        public async Task<IHttpActionResult> Post([FromBody]ColourRequest colourRequest)
         {
             if (colourRequest == null)
             {
                 return BadRequest("Invalid colour request.");
             }
 
-            var topicClient = _factory.CreateTopicClient("Commands");
-
-            var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(colourRequest)));
-            var brokeredMessage = new BrokeredMessage(json);
-
-            topicClient.Send(brokeredMessage);
+            await _busPublisher.PublishAsync(colourRequest);
 
             return Ok();
         }
-    }
-
-    public class ColourRequest
-    {
-        public int Red { get; set; }
-        public int Green { get; set; }
-        public int Blue { get; set; }
     }
 }

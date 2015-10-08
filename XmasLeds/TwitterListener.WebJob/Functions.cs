@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Azure.WebJobs;
 using Microsoft.ServiceBus.Messaging;
 using Newtonsoft.Json;
+using Rumr.DurryLights.Domain;
 using Tweetinvi;
 using Tweetinvi.Core.Credentials;
 using Tweetinvi.Core.Events.EventArguments;
@@ -64,10 +65,5 @@ namespace TwitterListener.WebJob
         }
     }
 
-    public class ColourRequest
-    {
-        public int Red { get; set; }
-        public int Green { get; set; }
-        public int Blue { get; set; }
-    }
+
 }

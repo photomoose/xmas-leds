@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Web;
+﻿using System.Configuration;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Routing;
-using Microsoft.ServiceBus;
-using Microsoft.ServiceBus.Messaging;
+using Rumr.DurryLights.ServiceBus;
 
 namespace XmasLeds.WebApi
 {
@@ -20,13 +15,9 @@ namespace XmasLeds.WebApi
             RouteConfig.RegisterRoutes(RouteTable.Routes);
 
             var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
-            var namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
-            var td = new TopicDescription("Commands");
+            var busPublisher = new BusPublisher(connectionString);
 
-            if (!namespaceManager.TopicExists(td.Path))
-            {
-                namespaceManager.CreateTopic(td);
-            }
+            busPublisher.InitializeAsync().Wait();
         }
     }
 }
