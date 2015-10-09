@@ -1,52 +1,46 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Rumr.DurryLights.Domain;
 using Rumr.DurryLights.ServiceBus;
+using Rumr.DurryLights.Sql;
 using Twilio.TwiML;
 using Twilio.TwiML.Mvc;
+using Colour = Rumr.DurryLights.Domain.Colour;
 
 namespace XmasLeds.WebApi.Controllers
 {
     public class SmsController : Controller
     {
         private readonly IBusPublisher _busPublisher;
+        private LightDisplayParser _lightDisplayParser;
 
         public SmsController()
         {
             var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
             _busPublisher = new BusPublisher(connectionString);
+            _lightDisplayParser = new LightDisplayParser(new ColourRepository());
         }
 
         [HttpPost]
         public async Task<ActionResult> Index(string from, string body)
         {
-            var matches = Regex.Match(body, "^(\\d{1,3}),(\\d{1,3}),(\\d{1,3})$", RegexOptions.Compiled);
+            var response = new TwilioResponse();
 
-            if (matches.Success)
+            var lightDisplay = await _lightDisplayParser.ParseAsync(body);
+
+            if (lightDisplay != null)
             {
-                var colourRequest = new ColourRequest
-                {
-                    Red = int.Parse(matches.Groups[1].Value),
-                    Green = int.Parse(matches.Groups[2].Value),
-                    Blue = int.Parse(matches.Groups[3].Value)
-                };
+                await _busPublisher.PublishAsync(lightDisplay);
 
-                await _busPublisher.PublishAsync(colourRequest);
-
-                var response = new TwilioResponse();
                 response.Message(string.Format("Hello {0}. Your colour request was successful.", from));
-
-                return new TwiMLResult(response);
             }
-            else
-            {
-                var response = new TwilioResponse();
-                response.Message(string.Format("Hello {0}. Your msg was {1}. Have a nice day!", from, body));
 
-                return new TwiMLResult(response);
-            }
+            return new TwiMLResult(response);
         }
     }
 }

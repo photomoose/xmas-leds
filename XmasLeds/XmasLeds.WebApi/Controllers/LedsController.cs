@@ -16,14 +16,14 @@ namespace XmasLeds.WebApi.Controllers
             _busPublisher = new BusPublisher(connectionString);
         }
 
-        public async Task<IHttpActionResult> Post([FromBody]ColourRequest colourRequest)
+        public async Task<IHttpActionResult> Post([FromBody]LightDisplay lightDisplay)
         {
-            if (colourRequest == null)
+            if (lightDisplay == null)
             {
                 return BadRequest("Invalid colour request.");
             }
 
-            await _busPublisher.PublishAsync(colourRequest);
+            await _busPublisher.PublishAsync(lightDisplay);
 
             return Ok();
         }

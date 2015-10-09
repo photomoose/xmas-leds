@@ -148,6 +148,10 @@
       <Project>{11B6364D-C953-4E62-BD21-7E7664D46D30}</Project>
       <Name>DurryLights.ServiceBus</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DurryLights.Sql\DurryLights.Sql.csproj">
+      <Project>{F351104F-C1DD-4166-A049-749098AA9D01}</Project>
+      <Name>DurryLights.Sql</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />

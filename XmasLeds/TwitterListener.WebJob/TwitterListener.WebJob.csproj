@@ -149,6 +149,10 @@
       <Project>{11B6364D-C953-4E62-BD21-7E7664D46D30}</Project>
       <Name>DurryLights.ServiceBus</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DurryLights.Sql\DurryLights.Sql.csproj">
+      <Project>{F351104F-C1DD-4166-A049-749098AA9D01}</Project>
+      <Name>DurryLights.Sql</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />

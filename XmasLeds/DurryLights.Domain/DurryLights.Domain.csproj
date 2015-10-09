@@ -39,8 +39,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Colour.cs" />
     <Compile Include="ColourRequest.cs" />
     <Compile Include="IBusPublisher.cs" />
+    <Compile Include="IColourRepository.cs" />
+    <Compile Include="LightDisplay.cs" />
+    <Compile Include="LightDisplayParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

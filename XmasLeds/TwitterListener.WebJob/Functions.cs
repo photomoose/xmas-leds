@@ -6,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.ServiceBus.Messaging;
 using Rumr.DurryLights.Domain;
 using Rumr.DurryLights.ServiceBus;
+using Rumr.DurryLights.Sql;
 using Tweetinvi;
 using Tweetinvi.Core.Credentials;
 using Tweetinvi.Core.Events.EventArguments;
@@ -16,13 +17,15 @@ namespace TwitterListener.WebJob
     public class Functions
     {
         private static IBusPublisher _busPublisher;
+        private static LightDisplayParser _lightDisplayParser;
 
         [NoAutomaticTrigger]
         public async static void ListenForTweetsAsync(TextWriter log)
         {
             var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
             _busPublisher = new BusPublisher(connectionString);
-
+            _lightDisplayParser = new LightDisplayParser(new ColourRepository());
+            
             var credentials = new TwitterCredentials(
                 ConfigurationManager.AppSettings["TwitterConsumerKey"],
                 ConfigurationManager.AppSettings["TwitterConsumerSecret"],
@@ -41,18 +44,11 @@ namespace TwitterListener.WebJob
         {
             await Console.Out.WriteLineAsync("Received tweet: " + e.Tweet);
 
-            var matches = Regex.Match(e.Tweet.Text, "(\\d{1,3}),(\\d{1,3}),(\\d{1,3})", RegexOptions.Compiled);
+            var lightDisplay = await _lightDisplayParser.ParseAsync(e.Tweet.Text);
 
-            if (matches.Success)
+            if (lightDisplay != null)
             {
-                var colourRequest = new ColourRequest
-                {
-                    Red = int.Parse(matches.Groups[1].Value),
-                    Green = int.Parse(matches.Groups[2].Value),
-                    Blue = int.Parse(matches.Groups[3].Value)
-                };
-
-                await _busPublisher.PublishAsync(colourRequest);
+                await _busPublisher.PublishAsync(lightDisplay);
 
                 Tweet.PublishTweetInReplyTo(string.Format("@{0} Thanks for your request!", e.Tweet.CreatedBy.ScreenName), e.Tweet);
             }
