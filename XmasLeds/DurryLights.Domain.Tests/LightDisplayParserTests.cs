@@ -18,8 +18,8 @@ namespace DurryLights.Domain.Tests
             _parser = new LightDisplayParser(_colourRepository);
         }
 
-        [Test]
-        public async Task Should_Parse_Valid_Colour()
+        [TestCase("white")]
+        public async Task Should_Parse_Valid_Colour(string text)
         {
             var white = new Colour("white", 255, 255, 255);
             GivenTheColourRepositoryReturns(white);
@@ -43,18 +43,19 @@ namespace DurryLights.Domain.Tests
             lightDisplay.Colour.Name.Should().Be("Custom");
         }
 
-        [Test]
-        public async Task Should_Invoke_Colour_Repository_With_Correct_Args()
+        [TestCase("black", "black")]
+        [TestCase("@durrylights black", "black")]
+        public async Task Should_Invoke_Colour_Repository_With_Correct_Args(string text, string potentialColour)
         {
-            await _parser.ParseAsync("black");
+            await _parser.ParseAsync(text);
 
-            _colourRepository.Received().FindColourAsync("black");
+            _colourRepository.Received().FindColourAsync(potentialColour);
         }
 
         [Test]
         public async Task Should_Return_Null()
         {
-            GivenTheColourRepositoryReturns(null);
+            GivenTheColourRepositoryReturnsNoMatches();
 
             var lightDisplay = await _parser.ParseAsync("invalid");
 
@@ -64,8 +65,15 @@ namespace DurryLights.Domain.Tests
         private void GivenTheColourRepositoryReturns(Colour colour)
         {
             _colourRepository
-                .FindColourAsync(Arg.Any<string>())
+                .FindColourAsync(Arg.Is(colour.Name))
                 .Returns(Task.FromResult(colour));
+        }
+
+        private void GivenTheColourRepositoryReturnsNoMatches()
+        {
+            _colourRepository
+                .FindColourAsync(Arg.Any<string>())
+                .Returns(Task.FromResult<Colour>(null));
         }
     }
 }

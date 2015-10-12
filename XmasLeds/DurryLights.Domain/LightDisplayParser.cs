@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Rumr.DurryLights.Domain
@@ -27,10 +29,22 @@ namespace Rumr.DurryLights.Domain
             }
             else
             {
-                colour = await _colourRepository.FindColourAsync(text);
+                var potentialColours = SplitIntoWords(text).Where(IsNotATwitterUsername).ToList();
+                
+                colour = await _colourRepository.FindColourAsync(potentialColours[0]);
             }
 
             return colour != null ? new LightDisplay(colour) : null;
+        }
+
+        private static IEnumerable<string> SplitIntoWords(string text)
+        {
+            return Regex.Split(text, "\\s+");
+        }
+
+        private static bool IsNotATwitterUsername(string text)
+        {
+            return !text.StartsWith("@");
         }
     }
 }

@@ -55,10 +55,11 @@ try:
 			if msg.body:
 				logger.info('Received ' + msg.body)
 
-				cmd = json.loads(msg.body)		
+				cmd = json.loads(msg.body)
+				colour = cmd["Colour"]		
 				logger.debug(cmd)
 
-				path = str(cmd["Red"]) + "," + str(cmd["Green"]) + "," + str(cmd["Blue"])
+				path = str(colour["R"]) + "," + str(colour["G"]) + "," + str(colour["B"])
 
 				urllib2.urlopen('http://localhost/mailbox/' + path)
 
