@@ -1,118 +1,155 @@
 #include <Console.h>
 #include <Mailbox.h>
+#include "xmas-leds.h"
 
-const int RED = 10;
-const int BLUE = 11;
-const int GREEN = 9;
-
-int prevR = 0;
 float currentR = 0;
-int prevG = 0;
 float currentG = 0;
-int prevB = 0;
 float currentB = 0;
 
 int increments = 1000;
-int wait = 3;
-int DEBUG = 1;
+bool DEBUG = true;
 int loopCount = 50;
+RGB colours[10];
+RGB prevColour = {0, 0, 0};
+int numColours;
 
 void setup() {
   Bridge.begin();
   Mailbox.begin();
   Console.begin();
-  pinMode(RED, OUTPUT);
-  pinMode(GREEN, OUTPUT);
-  pinMode(BLUE, OUTPUT);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
 }
 
 void loop() {
-  String message;
-  
+  uint8_t message[128];
+  int i;
+
   if (Mailbox.messageAvailable()) {
-    Mailbox.readMessage(message);
-    Console.print("Received message: ");
-    Console.println(message);
-    
-    int commaIndex1 = message.indexOf(',');
-    int commaIndex2 = message.indexOf(',', commaIndex1 + 1);
-      
-    int r = message.substring(0, commaIndex1).toInt();
-    int g = message.substring(commaIndex1 + 1, commaIndex2).toInt();
-    int b = message.substring(commaIndex2 + 1).toInt();
-       
-    fade(r, g, b);
+    parseMessage();
+    turnOffLeds();
+  }
+
+  for (int j = 0; j < numColours; j++) {
+    fade(&colours[j]);
+    delay(3000);
+
+    if (Mailbox.messageAvailable()) {
+      break;
+    }
   }
 }
 
+void setColour(struct RGB *colour, long value) {
+  colour->r = (value >> 16) & 0xFF;
+  colour->g = (value >> 8) & 0xFF;
+  colour->b = value & 0xFF;
+}
+
+void turnOffLeds() {
+  analogWrite(RED_PIN, 0);
+  analogWrite(GREEN_PIN, 0);
+  analogWrite(BLUE_PIN, 0);
+
+  currentR = 0;
+  currentG = 0;
+  currentB = 0;
+
+  prevColour.r = 0;
+  prevColour.g = 0;
+  prevColour.b = 0;
+}
+
+void parseMessage() {
+  uint8_t message[128];
+  int i;
+
+  Mailbox.readMessage(message, 128);
+  Console.print("Received message: ");
+  Console.println((char *)message);
+
+  char *token = strtok((char *)message, ",");
+
+  while (token != NULL && i < 10) {
+    Console.println(token);
+
+    long num = strtol(token, NULL, 16);
+    setColour(&colours[i++], num);
+
+    token = strtok(NULL, ",");
+  }
+
+  numColours = i;
+  Console.print("Number of items: ");
+  Console.println(numColours);
+}
+
 float calculateFadeSteps(int prevValue, int endValue) {
-  float diff = endValue - prevValue; 
+  float diff = endValue - prevValue;
   return diff / (float)increments;
 }
 
 float calculateVal(float step, float val) {
-  val += step;           
-  
+  val += step;
+
   if (val > 255) {
     val = 255;
-  } 
+  }
   else if (val < 0) {
     val = 0;
   }
-  
+
   return val;
 }
 
-void fade(int r, int g, int b) {
-  Console.print("Fading to (");
-  Console.print(r);
+void printLedStatus() {
+  Console.print("LED Status: (");
+  Console.print((int)currentR);
   Console.print(", ");
-  Console.print(g);
+  Console.print((int)currentG);
   Console.print(", ");
-  Console.print(b);
+  Console.print((int)currentB);
   Console.println(")");
-  
-  float stepR = calculateFadeSteps(prevR, r);
-  float stepG = calculateFadeSteps(prevG, g); 
-  float stepB = calculateFadeSteps(prevB, b);
-  
-  if (DEBUG) {
-    Console.print("Steps: ");
-    Console.print(stepR);
-    Console.print(" / ");
-    Console.print(stepG);
-    Console.print(" / ");
-    Console.println(stepB);
-  }
-    
+}
+
+void printFadeMessage(struct RGB *colour) {
+  Console.print("Fading to (");
+  Console.print(colour->r);
+  Console.print(", ");
+  Console.print(colour->g);
+  Console.print(", ");
+  Console.print(colour->b);
+  Console.println(")");
+}
+
+bool shouldPrintFadeStatus(int iteration) {
+  return (DEBUG && (iteration == 0 || iteration % loopCount == 0));
+}
+
+void fade(struct RGB *colour) {
+  printFadeMessage(colour);
+
+  float stepR = calculateFadeSteps((int)prevColour.r, (int)colour->r);
+  float stepG = calculateFadeSteps((int)prevColour.g, (int)colour->g);
+  float stepB = calculateFadeSteps((int)prevColour.b, (int)colour->b);
+
   for (int i = 0; i <= increments; i++) {
     currentR = calculateVal(stepR, currentR);
     currentG = calculateVal(stepG, currentG);
     currentB = calculateVal(stepB, currentB);
 
-    analogWrite(RED, currentR); 
-    analogWrite(GREEN, currentG);      
-    analogWrite(BLUE, currentB); 
+    analogWrite(RED_PIN, currentR);
+    analogWrite(GREEN_PIN, currentG);
+    analogWrite(BLUE_PIN, currentB);
 
-    //delay(wait);
-
-    if (DEBUG) {
-      if (i == 0 or i % loopCount == 0) { // b
-        Console.print("Iteration #");
-        Console.print(i);
-        Console.print(": (");
-        Console.print((int)currentR);
-        Console.print(", ");
-        Console.print((int)currentG);
-        Console.print(", ");  
-        Console.print((int)currentB);
-        Console.println(")"); 
-      } 
+    if (shouldPrintFadeStatus(i)) {
+      printLedStatus();
     }
   }
-  
+
   // Update current values for next loop
-  prevR = (int)currentR; 
-  prevG = (int)currentG; 
-  prevB = (int)currentB;
+  prevColour.r = currentR;
+  prevColour.g = currentG;
+  prevColour.b = currentB;
 }
