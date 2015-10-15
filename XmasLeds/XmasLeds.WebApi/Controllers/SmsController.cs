@@ -37,7 +37,7 @@ namespace XmasLeds.WebApi.Controllers
             {
                 await _busPublisher.PublishAsync(lightDisplay);
 
-                response.Message(string.Format("Hello {0}. Your colour request was successful.", from));
+                //response.Message(string.Format("Hello {0}. Your colour request was successful.", from));
             }
 
             return new TwiMLResult(response);

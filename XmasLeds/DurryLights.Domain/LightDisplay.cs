@@ -1,17 +1,25 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Rumr.DurryLights.Domain
 {
     public class LightDisplay
     {
-        private readonly Colour _colour;
+        private readonly List<string> _colours;
 
-        public LightDisplay(Colour colour)
+        public LightDisplay()
         {
-            _colour = colour;
+            _colours = new List<string>();
         }
 
-        public Colour Colour
+        public LightDisplay(IEnumerable<Colour> colours)
         {
-            get { return _colour; }
+            _colours = new List<string>(colours.Select(c => c.HexValue));
+        }
+
+        public IList<string> Colours
+        {
+            get { return _colours.AsReadOnly(); }
         }
     }
 }

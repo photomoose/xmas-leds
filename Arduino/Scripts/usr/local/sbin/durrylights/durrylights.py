@@ -56,12 +56,13 @@ try:
 				logger.info('Received ' + msg.body)
 
 				cmd = json.loads(msg.body)
-				colour = cmd["Colour"]		
-				logger.debug(cmd)
 
-				path = str(colour["R"]) + "," + str(colour["G"]) + "," + str(colour["B"])
+				path = ",".join(cmd["Colours"])
+				url = 'http://localhost/mailbox/' + path
 
-				urllib2.urlopen('http://localhost/mailbox/' + path)
+				logger.debug('Mailbox message: ' + str(url))
+				
+				urllib2.urlopen(url)
 
 				msg.delete()
 		except Exception as e:

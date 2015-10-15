@@ -22,13 +22,23 @@ void setup() {
   pinMode(BLUE_PIN, OUTPUT);
 }
 
+int freeRam () {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
 void loop() {
+  Console.println("\n[memCheck]");
+  Console.println(freeRam());  
+  
   uint8_t message[128];
   int i;
 
   if (Mailbox.messageAvailable()) {
     parseMessage();
     turnOffLeds();
+    delay(500);
   }
 
   for (int j = 0; j < numColours; j++) {
