@@ -40,15 +40,18 @@ void loop() {
     turnOffLeds();
     delay(500);
   }
-
-  for (int j = 0; j < numColours; j++) {
-    fade(&colours[j]);
-    delay(3000);
-
-    if (Mailbox.messageAvailable()) {
-      break;
-    }
-  }
+  
+  strobe();
+  
+  fadeInOut();
+  
+  cycle();
+  
+  fadeAlternate();
+  
+  flash();
+  flashAlternate();
+ 
 }
 
 void setColour(struct RGB *colour, long value) {
@@ -135,6 +138,123 @@ void printFadeMessage(struct RGB *colour) {
 
 bool shouldPrintFadeStatus(int iteration) {
   return (DEBUG && (iteration == 0 || iteration % loopCount == 0));
+}
+
+void flash() {
+  for (int i = 0; i < numColours; i++) {
+    for (int j = 0; j < 4; j++) {
+      analogWrite(RED_PIN, colours[i].r);
+      analogWrite(GREEN_PIN, colours[i].g);
+      analogWrite(BLUE_PIN, colours[i].b);
+    
+      delay(1000);
+      
+      analogWrite(RED_PIN, 0);
+      analogWrite(GREEN_PIN, 0);
+      analogWrite(BLUE_PIN, 0);
+      
+      delay(1000);
+    }
+    
+    if (Mailbox.messageAvailable()) {
+      break;
+    }    
+  }  
+}
+
+void fadeInOut() {
+  struct RGB black = {0, 0, 0};
+  
+  analogWrite(RED_PIN, 0);
+  analogWrite(GREEN_PIN, 0);
+  analogWrite(BLUE_PIN, 0);
+      
+  for (int j = 0; j < numColours; j++) {
+    fade(&colours[j]);
+    fade(&black);
+
+    if (Mailbox.messageAvailable()) {
+      break;
+    }
+  }  
+}
+void fadeAlternate() {
+  for (int j = 0; j < numColours; j++) {
+    fade(&colours[j]);
+    delay(3000);
+
+    if (Mailbox.messageAvailable()) {
+      break;
+    }
+  }
+}
+
+void flashAlternate() {
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < numColours; j++) {
+      analogWrite(RED_PIN, colours[j].r);
+      analogWrite(GREEN_PIN, colours[j].g);
+      analogWrite(BLUE_PIN, colours[j].b);
+    
+      delay(1000);
+      
+      analogWrite(RED_PIN, 0);
+      analogWrite(GREEN_PIN, 0);
+      analogWrite(BLUE_PIN, 0);
+      
+      delay(1000);
+    }
+    
+    if (Mailbox.messageAvailable()) {
+      break;
+    }    
+  }  
+}
+
+void cycle() {
+  unsigned long until;
+  until = millis() + 10000;
+  
+  while (millis() < until) {
+    for (int j = 0; j < numColours; j++) {
+      analogWrite(RED_PIN, colours[j].r);
+      analogWrite(GREEN_PIN, colours[j].g);
+      analogWrite(BLUE_PIN, colours[j].b);
+    
+      delay(1000);
+    }
+    
+    if (Mailbox.messageAvailable()) {
+      break;
+    }    
+  }  
+}
+
+void strobe() {
+  unsigned long until;
+    
+  for (int j = 0; j < numColours; j++) { 
+   until = millis() + 4000;
+   
+    while (millis() < until) {
+
+      analogWrite(RED_PIN, colours[j].r);
+      analogWrite(GREEN_PIN, colours[j].g);
+      analogWrite(BLUE_PIN, colours[j].b);
+    
+      delay(30);
+      
+      analogWrite(RED_PIN, 0);
+      analogWrite(GREEN_PIN, 0);
+      analogWrite(BLUE_PIN, 0);
+      
+      delay(30);      
+    }
+    
+    if (Mailbox.messageAvailable()) {
+      break;
+    }    
+  }  
 }
 
 void fade(struct RGB *colour) {

@@ -17,4 +17,8 @@ void printLedStatus();
 void printFadeMessage(struct RGB *colour);
 bool shouldPrintFadeStatus(int iteration);
 void fade(struct RGB *colour);
-
+void flash();
+void flashAlternate();
+void cycle();
+void fadeAlternate();  
+void strobe();
