@@ -16,15 +16,15 @@ namespace Rumr.DurryLights.Domain
 
         public async Task<LightDisplay> ParseAsync(string text)
         {
-            var potentialColours = SplitIntoWords(text)
+            var words = SplitIntoWords(text)
                                     .Select(c => c.ToLower())
                                     .ToList();
                 
-            var matchingColours = (await _colourRepository.FindColoursAsync(potentialColours.Distinct())).ToDictionary(c => c.Name);
+            var matchingColours = (await _colourRepository.FindColoursAsync(words.Distinct())).ToDictionary(c => c.Name);
 
             var matchedColours = new List<Colour>();
                 
-            foreach (var potentialColour in potentialColours)
+            foreach (var potentialColour in words)
             {
                 if (matchingColours.ContainsKey(potentialColour))
                 {
