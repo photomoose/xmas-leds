@@ -37,6 +37,7 @@ namespace Rumr.DurryLights.ServiceBus
 
             var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)));
             var brokeredMessage = new BrokeredMessage(json);
+            brokeredMessage.Properties.Add("MessageType", message.GetType().Name);
 
             await topicClient.SendAsync(brokeredMessage);
         }

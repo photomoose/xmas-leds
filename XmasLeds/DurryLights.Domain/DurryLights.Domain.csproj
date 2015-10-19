@@ -41,12 +41,19 @@
   <ItemGroup>
     <Compile Include="Colour.cs" />
     <Compile Include="ColourRequest.cs" />
+    <Compile Include="LightDisplayFactory.cs" />
+    <Compile Include="LightDisplays\CyclingLightDisplay.cs" />
+    <Compile Include="LightDisplays\DefaultLightDisplay.cs" />
+    <Compile Include="LightDisplays\FadingInOutLightDisplay.cs" />
+    <Compile Include="LightDisplays\FlashingLightDisplay.cs" />
     <Compile Include="IBusPublisher.cs" />
     <Compile Include="IColourRepository.cs" />
-    <Compile Include="LightDisplay.cs" />
+    <Compile Include="LightDisplays\LightDisplay.cs" />
     <Compile Include="LightDisplayParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="LightDisplays\StrobeLightDisplay.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

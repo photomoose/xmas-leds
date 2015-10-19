@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Web.Http;
 using Rumr.DurryLights.Domain;
+using Rumr.DurryLights.Domain.LightDisplays;
 using Rumr.DurryLights.ServiceBus;
 
 namespace XmasLeds.WebApi.Controllers
@@ -16,7 +17,7 @@ namespace XmasLeds.WebApi.Controllers
             _busPublisher = new BusPublisher(connectionString);
         }
 
-        public async Task<IHttpActionResult> Post([FromBody]LightDisplay lightDisplay)
+        public async Task<IHttpActionResult> Post([FromBody]DefaultLightDisplay lightDisplay)
         {
             if (lightDisplay == null)
             {

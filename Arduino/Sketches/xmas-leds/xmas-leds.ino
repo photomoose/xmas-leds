@@ -12,6 +12,11 @@ int loopCount = 50;
 RGB colours[10];
 RGB prevColour = {0, 0, 0};
 int numColours;
+char programme;
+const char FADE = 'f';
+const char FLASH = 'F';
+const char STROBE = 's';
+const char CYCLE = 'c';
 
 void setup() {
   Bridge.begin();
@@ -41,17 +46,26 @@ void loop() {
     delay(500);
   }
   
-  strobe();
-  
-  fadeInOut();
-  
-  cycle();
-  
-  fadeAlternate();
-  
-  flash();
-  flashAlternate();
- 
+  switch (programme) {
+    case FADE:
+      fadeInOut();
+      break;
+      
+    case STROBE:
+      strobe();
+      break;
+    
+    case CYCLE:
+      cycle();
+      break;
+      
+    case FLASH:
+      flashAlternate();
+      break;
+      
+    default:  
+      fadeAlternate();  
+  }
 }
 
 void setColour(struct RGB *colour, long value) {
@@ -84,6 +98,15 @@ void parseMessage() {
 
   char *token = strtok((char *)message, ",");
 
+  if (strlen(token) == 1) {
+    programme = token[0];
+    Console.print("Programme: ");
+    Console.println(programme);
+    token = strtok(NULL, ",");
+  } else {
+    programme = NULL;
+  }
+  
   while (token != NULL && i < 10) {
     Console.println(token);
 

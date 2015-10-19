@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using Rumr.DurryLights.Domain;
+using Rumr.DurryLights.Domain.LightDisplays;
 
 namespace DurryLights.Domain.Tests
 {
@@ -146,7 +148,6 @@ namespace DurryLights.Domain.Tests
             [Test]
             public async Task Result_Should_Be_Null()
             {
-
                 var lightDisplay = await _parser.ParseAsync("no matching colours");
 
                 lightDisplay.Should().BeNull();
@@ -157,6 +158,60 @@ namespace DurryLights.Domain.Tests
                 _colourRepository
                     .FindColoursAsync(Arg.Any<IEnumerable<string>>())
                     .Returns(Task.FromResult(Enumerable.Empty<Colour>()));
+            }
+        }
+
+        [TestFixture]
+        public class When_Parsing_String_With_Command
+        {
+            private IColourRepository _colourRepository;
+            private LightDisplayParser _parser;
+
+            [SetUp]
+            public void SetUp()
+            {
+                var white = new Colour("white", 255, 255, 255);
+                var red = new Colour("red", 255, 0, 0);
+                
+                _colourRepository = Substitute.For<IColourRepository>();
+                _parser = new LightDisplayParser(_colourRepository);
+
+                GivenTheColourRepositoryReturns(white, red);
+            }
+
+            [TestCase("fade", typeof(FadingInOutLightDisplay))]
+            [TestCase("FADE", typeof(FadingInOutLightDisplay))]
+            [TestCase("strobe", typeof(StrobeLightDisplay))]
+            [TestCase("cycle", typeof(CyclingLightDisplay))]
+            [TestCase("flash", typeof(FlashingLightDisplay))]
+            [TestCase("flash ", typeof(FlashingLightDisplay))]
+            public async Task Result_Should_Be_Fading_Light_Display(string command, Type lightDisplayType)
+            {
+                var result = await _parser.ParseAsync(command + " red, white");
+
+                result.Should().BeOfType(lightDisplayType);
+            }
+
+            [TestCase("fade", typeof(FadingInOutLightDisplay))]
+            [TestCase("FADE", typeof(FadingInOutLightDisplay))]
+            [TestCase("strobe", typeof(StrobeLightDisplay))]
+            [TestCase("cycle", typeof(CyclingLightDisplay))]
+            [TestCase("flash", typeof(FlashingLightDisplay))]
+            [TestCase("flash ", typeof(FlashingLightDisplay))]
+            public async Task Result_Should_Contain_Hex_Values_For_Each_Colour(string command, Type lightDisplayType)
+            {
+                var result = await _parser.ParseAsync(command + " red, white");
+
+                result.Colours.Should().Contain("FF0000");
+                result.Colours.Should().Contain("FFFFFF");
+            }
+
+
+            private void GivenTheColourRepositoryReturns(params Colour[] colours)
+            {
+                _colourRepository
+                    .FindColoursAsync(Arg.Any<IEnumerable<string>>())
+                    .Returns(Task.FromResult<IEnumerable<Colour>>(colours));
             }
         }
     }
