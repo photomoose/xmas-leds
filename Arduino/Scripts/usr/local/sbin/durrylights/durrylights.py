@@ -11,6 +11,16 @@ import ConfigParser
 from azure.servicebus import ServiceBusService, Rule
 from urllib2 import URLError, HTTPError
 
+def getCommand(messageType):
+	return {
+		'StrobeLightDisplay': 's',
+		'FadingInOutLightDisplay': 'f',
+		'FlashingLightDisplay': 'F',
+		'CyclingLightDisplay': 'c',
+		'DefaultLightDisplay': 'd'
+
+	}[messageType]
+
 LOG_FILENAME = '/var/log/durrylights.log'
 
 # Set up a specific logger with our desired output level
@@ -53,11 +63,13 @@ try:
 			msg = sbs.receive_subscription_message('commands', 'arduino')
 
 			if msg.body:
-				logger.info('Received ' + msg.body)
+				displayType = msg.custom_properties['messagetype']
+
+				logger.info('Received ' + displayType + ': ' + msg.body)
 
 				cmd = json.loads(msg.body)
 
-				path = ",".join(cmd["Colours"])
+				path = getCommand(displayType) + ',' + ','.join(cmd["Colours"])
 				url = 'http://localhost/mailbox/' + path
 
 				logger.debug('Mailbox message: ' + str(url))
