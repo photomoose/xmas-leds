@@ -34,8 +34,8 @@ int freeRam () {
 }
 
 void loop() {
-  Console.println("\n[memCheck]");
-  Console.println(freeRam());  
+  //Console.println("\n[memCheck]");
+  //Console.println(freeRam());  
   
   uint8_t message[128];
   int i;
@@ -164,6 +164,8 @@ bool shouldPrintFadeStatus(int iteration) {
 }
 
 void flash() {
+  Console.println("Programme: Flash");
+  
   for (int i = 0; i < numColours; i++) {
     for (int j = 0; j < 4; j++) {
       analogWrite(RED_PIN, colours[i].r);
@@ -186,6 +188,8 @@ void flash() {
 }
 
 void fadeInOut() {
+  Console.println("Programme: Fade In/Out");
+  
   struct RGB black = {0, 0, 0};
   
   analogWrite(RED_PIN, 0);
@@ -213,6 +217,8 @@ void fadeAlternate() {
 }
 
 void flashAlternate() {
+  Console.println("Programme: Flash Alternate");
+  
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < numColours; j++) {
       analogWrite(RED_PIN, colours[j].r);
@@ -235,6 +241,8 @@ void flashAlternate() {
 }
 
 void cycle() {
+  Console.println("Programme: Cycle");
+  
   unsigned long until;
   until = millis() + 10000;
   
@@ -254,6 +262,8 @@ void cycle() {
 }
 
 void strobe() {
+  Console.println("Programme: Strobe");
+  
   unsigned long until;
     
   for (int j = 0; j < numColours; j++) { 
