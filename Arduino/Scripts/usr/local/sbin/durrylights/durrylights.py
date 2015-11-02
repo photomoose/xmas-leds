@@ -63,6 +63,7 @@ try:
 			msg = sbs.receive_subscription_message('commands', 'arduino')
 
 			if msg.body:
+
 				displayType = msg.custom_properties['messagetype']
 
 				logger.info('Received ' + displayType + ': ' + msg.body)
