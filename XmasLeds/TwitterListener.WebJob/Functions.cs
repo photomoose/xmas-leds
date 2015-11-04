@@ -44,7 +44,9 @@ namespace TwitterListener.WebJob
         {
             await Console.Out.WriteLineAsync("Received tweet: " + e.Tweet);
 
-            var lightDisplay = await _lightDisplayParser.ParseAsync(e.Tweet.Text);
+            var text = RemoveTwitterHandles(e.Tweet.Text);
+
+            var lightDisplay = await _lightDisplayParser.ParseAsync(text);
 
             if (lightDisplay != null)
             {
@@ -52,6 +54,11 @@ namespace TwitterListener.WebJob
 
                 Tweet.PublishTweetInReplyTo(string.Format("@{0} Thanks for your request!", e.Tweet.CreatedBy.ScreenName), e.Tweet);
             }
+        }
+
+        private static string RemoveTwitterHandles(string text)
+        {
+            return Regex.Replace(text, "@\\w+", string.Empty);
         }
     }
 

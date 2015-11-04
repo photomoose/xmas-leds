@@ -17,7 +17,7 @@ namespace XmasLeds.WebApi.Controllers
     public class SmsController : Controller
     {
         private readonly IBusPublisher _busPublisher;
-        private LightDisplayParser _lightDisplayParser;
+        private readonly LightDisplayParser _lightDisplayParser;
 
         public SmsController()
         {
