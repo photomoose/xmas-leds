@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{09DAFC57
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DurryLights.Domain.Tests", "DurryLights.Domain.Tests\DurryLights.Domain.Tests.csproj", "{EF8AC5BD-A852-4739-BAC1-3FF8575128CE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DurryLights.ElasticSearch", "DurryLights.ElasticSearch\DurryLights.ElasticSearch.csproj", "{26AC4D7B-F66D-40F5-B04B-3AA90C8507BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{EF8AC5BD-A852-4739-BAC1-3FF8575128CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF8AC5BD-A852-4739-BAC1-3FF8575128CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF8AC5BD-A852-4739-BAC1-3FF8575128CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26AC4D7B-F66D-40F5-B04B-3AA90C8507BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26AC4D7B-F66D-40F5-B04B-3AA90C8507BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26AC4D7B-F66D-40F5-B04B-3AA90C8507BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26AC4D7B-F66D-40F5-B04B-3AA90C8507BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

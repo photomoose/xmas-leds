@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using Microsoft.Azure.WebJobs;
-using Microsoft.ServiceBus.Messaging;
-using Rumr.DurryLights.Domain;
+using Rumr.DurryLights.Domain.Models;
+using Rumr.DurryLights.Domain.Services;
+using Rumr.DurryLights.Domain.Utilities;
 using Rumr.DurryLights.ServiceBus;
 using Rumr.DurryLights.Sql;
 using Tweetinvi;
@@ -16,16 +19,11 @@ namespace TwitterListener.WebJob
 {
     public class Functions
     {
-        private static IBusPublisher _busPublisher;
-        private static LightDisplayParser _lightDisplayParser;
+        private static ILightsService _lightsService;
 
         [NoAutomaticTrigger]
         public async static void ListenForTweetsAsync(TextWriter log)
         {
-            var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
-            _busPublisher = new BusPublisher(connectionString);
-            _lightDisplayParser = new LightDisplayParser(new ColourRepository());
-            
             var credentials = new TwitterCredentials(
                 ConfigurationManager.AppSettings["TwitterConsumerKey"],
                 ConfigurationManager.AppSettings["TwitterConsumerSecret"],
@@ -46,14 +44,19 @@ namespace TwitterListener.WebJob
 
             var text = RemoveTwitterHandles(e.Tweet.Text);
 
-            var lightDisplay = await _lightDisplayParser.ParseAsync(text);
-
-            if (lightDisplay != null)
+            using (var client = new HttpClient())
             {
-                await _busPublisher.PublishAsync(lightDisplay);
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("Source", "twitter"),
+                    new KeyValuePair<string, string>("Text", text),
+                    new KeyValuePair<string, string>("From", e.Tweet.CreatedBy.Name)
+                });
 
-                Tweet.PublishTweetInReplyTo(string.Format("@{0} Thanks for your request!", e.Tweet.CreatedBy.ScreenName), e.Tweet);
+                await client.PostAsync(ConfigurationManager.AppSettings["DurryLightsApiEndpoint"], content);
             }
+
+            Tweet.PublishTweetInReplyTo(string.Format("@{0} Thanks for your request!", e.Tweet.CreatedBy.ScreenName), e.Tweet);
         }
 
         private static string RemoveTwitterHandles(string text)

@@ -1,33 +1,49 @@
 ﻿using System.Collections.Generic;
-using System.Data.Entity;
+using System.Configuration;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
-using Rumr.DurryLights.Domain;
+using Microsoft.WindowsAzure.Storage;
+using Rumr.DurryLights.Domain.Models;
+using Rumr.DurryLights.Domain.Repositories;
 
 namespace Rumr.DurryLights.Sql
 {
     public class ColourRepository : IColourRepository
     {
-        public async Task<Domain.Colour> FindColourAsync(string colourName)
-        {
-            using (var db = new LightsContext())
-            {
-                var colour = await db.Colours.SingleOrDefaultAsync(c => c.Name.Equals(colourName.ToLower()));
+        private readonly string _connectionString;
 
-                return colour != null ? new Domain.Colour(colour.Name, colour.R, colour.G, colour.B) : null;
-            }
+        public ColourRepository(string connectionString)
+        {
+            _connectionString = connectionString;
         }
 
-        public async Task<IEnumerable<Domain.Colour>> FindColoursAsync(IEnumerable<string> colourNames)
+        public async Task<IEnumerable<Colour>> GetColoursAsync()
         {
-            using (var db = new LightsContext())
-            {
-                var colours = await db.Colours
-                    .Where(c => colourNames.Contains(c.Name))
-                    .ToListAsync();
+            var storageAccount = CloudStorageAccount.Parse(_connectionString);
 
-                return colours.Select(c => new Domain.Colour(c.Name, c.R, c.G, c.B));
+            var blobClient = storageAccount.CreateCloudBlobClient();
+
+            var container = blobClient.GetContainerReference("colours");
+
+            var blob = container.GetBlockBlobReference("colours.txt");
+
+            var contents = await blob.DownloadTextAsync();
+
+            var colours = new List<Colour>();
+
+            using (var sr = new StringReader(contents))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    var parts = line.Split(',');
+                    colours.Add(new Colour(parts[0], parts[1]));
+                }
             }
+
+            return colours;
         }
     }
 }

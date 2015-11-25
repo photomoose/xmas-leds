@@ -1,10 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Newtonsoft.Json;
-using Rumr.DurryLights.Domain;
+using Rumr.DurryLights.Domain.Messaging;
 
 namespace Rumr.DurryLights.ServiceBus
 {
@@ -37,6 +38,18 @@ namespace Rumr.DurryLights.ServiceBus
 
             var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)));
             var brokeredMessage = new BrokeredMessage(json);
+            brokeredMessage.Properties.Add("MessageType", message.GetType().Name);
+
+            await topicClient.SendAsync(brokeredMessage);
+        }
+
+        public async Task PublishAsync<T>(T message, DateTime scheduledEnqueueTimeUtc)
+        {
+            var topicClient = _factory.CreateTopicClient("Commands");
+
+            var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)));
+            var brokeredMessage = new BrokeredMessage(json);
+            brokeredMessage.ScheduledEnqueueTimeUtc = scheduledEnqueueTimeUtc;
             brokeredMessage.Properties.Add("MessageType", message.GetType().Name);
 
             await topicClient.SendAsync(brokeredMessage);

@@ -31,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -39,19 +40,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Colour.cs" />
-    <Compile Include="ColourRequest.cs" />
-    <Compile Include="LightDisplayFactory.cs" />
-    <Compile Include="LightDisplays\CyclingLightDisplay.cs" />
-    <Compile Include="LightDisplays\DefaultLightDisplay.cs" />
-    <Compile Include="LightDisplays\FadingInOutLightDisplay.cs" />
-    <Compile Include="LightDisplays\FlashingLightDisplay.cs" />
-    <Compile Include="IBusPublisher.cs" />
-    <Compile Include="IColourRepository.cs" />
-    <Compile Include="LightDisplays\LightDisplay.cs" />
-    <Compile Include="LightDisplayParser.cs" />
+    <Compile Include="IMetricWriter.cs" />
+    <Compile Include="Models\Metric.cs" />
+    <Compile Include="Models\Colour.cs" />
+    <Compile Include="Utilities\DateTimeProvider.cs" />
+    <Compile Include="Utilities\IDateTimeProvider.cs" />
+    <Compile Include="Services\ILightsService.cs" />
+    <Compile Include="Utilities\LightDisplayFactory.cs" />
+    <Compile Include="Commands\CyclingLightDisplay.cs" />
+    <Compile Include="Commands\DefaultLightDisplay.cs" />
+    <Compile Include="Commands\FadingInOutLightDisplay.cs" />
+    <Compile Include="Commands\FlashingLightDisplay.cs" />
+    <Compile Include="Messaging\IBusPublisher.cs" />
+    <Compile Include="Repositories\IColourRepository.cs" />
+    <Compile Include="Commands\LightDisplay.cs" />
+    <Compile Include="Utilities\LightDisplayParser.cs" />
+    <Compile Include="Models\LightsRequest.cs" />
+    <Compile Include="Services\LightsService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="LightDisplays\StrobeLightDisplay.cs" />
+    <Compile Include="Commands\StrobeLightDisplay.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

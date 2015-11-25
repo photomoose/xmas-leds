@@ -1,44 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
-using System.Text.RegularExpressions;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using Rumr.DurryLights.Domain;
-using Rumr.DurryLights.ServiceBus;
-using Rumr.DurryLights.Sql;
+using Rumr.DurryLights.Domain.Models;
+using Rumr.DurryLights.Domain.Services;
 using Twilio.TwiML;
 using Twilio.TwiML.Mvc;
-using Colour = Rumr.DurryLights.Domain.Colour;
 
 namespace XmasLeds.WebApi.Controllers
 {
     public class SmsController : Controller
     {
-        private readonly IBusPublisher _busPublisher;
-        private readonly LightDisplayParser _lightDisplayParser;
+        private readonly ILightsService _lightsService;
 
-        public SmsController()
+        public SmsController(ILightsService lightsService)
         {
-            var connectionString = ConfigurationManager.AppSettings["Microsoft.ServiceBus.ConnectionString"];
-            _busPublisher = new BusPublisher(connectionString);
-            _lightDisplayParser = new LightDisplayParser(new ColourRepository());
+            _lightsService = lightsService;
         }
 
         [HttpPost]
         public async Task<ActionResult> Index(string from, string body)
         {
-            var response = new TwilioResponse();
-
-            var lightDisplay = await _lightDisplayParser.ParseAsync(body);
-
-            if (lightDisplay != null)
+            var request = new LightsRequest
             {
-                await _busPublisher.PublishAsync(lightDisplay);
+                Source = "twilio",
+                From = from,
+                Text = body
+            };
 
-                //response.Message(string.Format("Hello {0}. Your colour request was successful.", from));
-            }
+            await _lightsService.HandleRequestAsync(request);
+
+            var response = new TwilioResponse();
 
             return new TwiMLResult(response);
         }
