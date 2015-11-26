@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using Microsoft.Azure.WebJobs;
+using Newtonsoft.Json;
 using Rumr.DurryLights.Domain.Models;
 using Rumr.DurryLights.Domain.Services;
 using Rumr.DurryLights.Domain.Utilities;
@@ -19,8 +21,6 @@ namespace TwitterListener.WebJob
 {
     public class Functions
     {
-        private static ILightsService _lightsService;
-
         [NoAutomaticTrigger]
         public async static void ListenForTweetsAsync(TextWriter log)
         {
@@ -50,13 +50,35 @@ namespace TwitterListener.WebJob
                 {
                     new KeyValuePair<string, string>("Source", "twitter"),
                     new KeyValuePair<string, string>("Text", text),
-                    new KeyValuePair<string, string>("From", e.Tweet.CreatedBy.Name)
+                    new KeyValuePair<string, string>("From", e.Tweet.CreatedBy.ScreenName)
                 });
 
-                await client.PostAsync(ConfigurationManager.AppSettings["DurryLightsApiEndpoint"], content);
+                var response = await client.PostAsync(ConfigurationManager.AppSettings["DurryLightsApiEndpoint"], content);
+                string reply;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var lightsResponse = JsonConvert.DeserializeObject<LightsResponse>(responseContent);
+
+                    if (lightsResponse.IsScheduled && lightsResponse.ScheduledForUtc.HasValue)
+                    {
+                        reply = string.Format("Thanks! Your lights have been scheduled for {0}. Merry Christmas!",
+                            lightsResponse.ScheduledForUtc.Value.ToString("HH:mm"));
+                    }
+                    else
+                    {
+                        reply = "Thanks! Your lights will be shown shortly. Merry Christmas!";
+                    }
+                }
+                else
+                {
+                    reply = "Ooops. Something went wrong. Please try again later.";
+                }
+
+                Tweet.PublishTweetInReplyTo(string.Format("@{0} {1}", e.Tweet.CreatedBy.ScreenName, reply), e.Tweet);
             }
 
-            Tweet.PublishTweetInReplyTo(string.Format("@{0} Thanks for your request!", e.Tweet.CreatedBy.ScreenName), e.Tweet);
         }
 
         private static string RemoveTwitterHandles(string text)

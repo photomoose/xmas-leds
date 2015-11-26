@@ -21,9 +21,9 @@ namespace XmasLeds.WebApi.Controllers
                 return BadRequest("Invalid request.");
             }
 
-            await _lightsService.HandleRequestAsync(request);
+            var result = await _lightsService.HandleRequestAsync(request);
 
-            return Ok();
+            return Ok(result);
         }
     }
 }

@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IMetricWriter.cs" />
+    <Compile Include="Models\LightsResponse.cs" />
     <Compile Include="Models\Metric.cs" />
     <Compile Include="Models\Colour.cs" />
     <Compile Include="Utilities\DateTimeProvider.cs" />

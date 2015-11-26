@@ -313,8 +313,47 @@ namespace DurryLights.Domain.Tests
             metric.ScheduledDelaySecs.Should().Be(60 - 10);
         }
 
+        [Test]
+        public async Task Given_Request_Is_Scheduled_Then_Service_Should_Return_Scheduled_Time()
+        {
+            var request1 = new LightsRequestBuilder()
+                .ForText("red")
+                .From("@photomoose")
+                .Build();
 
-    private void GivenTheColourRepositoryReturns(params Colour[] colours)
+            var request2 = new LightsRequestBuilder()
+                .ForText("blue")
+                .From("@durrylights")
+                .Build();
+
+            var now = new DateTime(2015, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var scheduledTime = now.AddMinutes(1);
+            _dateTimeProvider.UtcNow().Returns(now);
+
+            await _lightsService.HandleRequestAsync(request1);
+            var result = await _lightsService.HandleRequestAsync(request2);
+
+            result.IsSuccess.Should().BeTrue();
+            result.IsScheduled.Should().BeTrue();
+            result.ScheduledForUtc.Should().Be(scheduledTime);
+        }
+
+        [Test]
+        public async Task Given_Request_Is_Not_Scheduled_Then_Service_Should_Return_Success()
+        {
+            var request = new LightsRequestBuilder()
+                .ForText("red")
+                .From("@photomoose")
+                .Build();
+
+            var result = await _lightsService.HandleRequestAsync(request);
+
+            result.IsSuccess.Should().BeTrue();
+            result.IsScheduled.Should().BeFalse();
+            result.ScheduledForUtc.Should().NotHaveValue();
+        }
+
+        private void GivenTheColourRepositoryReturns(params Colour[] colours)
         {
             _colourRepository.GetColoursAsync().Returns(Task.FromResult((IEnumerable<Colour>)colours));
         }

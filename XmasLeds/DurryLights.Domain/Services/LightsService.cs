@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Rumr.DurryLights.Domain.Commands;
 using Rumr.DurryLights.Domain.Messaging;
 using Rumr.DurryLights.Domain.Models;
 using Rumr.DurryLights.Domain.Repositories;
@@ -29,7 +30,7 @@ namespace Rumr.DurryLights.Domain.Services
             _lightDisplayParser = new LightDisplayParser(colourRepository);
         }
 
-        public async Task HandleRequestAsync(LightsRequest request)
+        public async Task<LightsResponse> HandleRequestAsync(LightsRequest request)
         {
             var now = _dateTimeProvider.UtcNow();
 
@@ -47,7 +48,7 @@ namespace Rumr.DurryLights.Domain.Services
             {
                 await _metricWriter.SendAsync(metric);
 
-                return;
+                return LightsResponse.Failure();
             }
 
             var scheduledEnqueueTimeUtc = _lastRequestUtc.AddMinutes(1);
@@ -77,6 +78,8 @@ namespace Rumr.DurryLights.Domain.Services
             metric.ScheduledDelaySecs = _isScheduleActive ? (double?)(scheduledEnqueueTimeUtc - now).TotalSeconds : null;
 
             await _metricWriter.SendAsync(metric);
+
+            return _isScheduleActive ? LightsResponse.Scheduled(scheduledEnqueueTimeUtc) : LightsResponse.Success();
         }
     }
 }

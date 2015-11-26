@@ -133,6 +133,8 @@
   <ItemGroup>
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Configuration\ISmsSettings.cs" />
+    <Compile Include="Configuration\SmsSettings.cs" />
     <Compile Include="Controllers\LightsController.cs" />
     <Compile Include="Controllers\SmsController.cs" />
     <Compile Include="Global.asax.cs">

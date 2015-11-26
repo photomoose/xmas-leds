@@ -14,6 +14,7 @@ using Rumr.DurryLights.Domain.Services;
 using Rumr.DurryLights.Domain.Utilities;
 using Rumr.DurryLights.ServiceBus;
 using Rumr.DurryLights.Sql;
+using XmasLeds.WebApi.Configuration;
 
 namespace XmasLeds.WebApi
 {
@@ -33,6 +34,8 @@ namespace XmasLeds.WebApi
             builder.RegisterType<DateTimeProvider>().As<IDateTimeProvider>();
             builder.RegisterType<ElasticMetricWriter>().As<IMetricWriter>()
                 .WithParameter("elasticSearchEndpoint", ConfigurationManager.AppSettings["ElasticSearchEndpoint"]);
+
+            builder.RegisterType<SmsSettings>().As<ISmsSettings>().SingleInstance();
 
             var container = builder.Build();
             GlobalConfiguration.Configuration.DependencyResolver = new AutofacWebApiDependencyResolver(container);

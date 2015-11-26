@@ -7,16 +7,19 @@ using Rumr.DurryLights.Domain.Models;
 using Rumr.DurryLights.Domain.Services;
 using Twilio.TwiML;
 using Twilio.TwiML.Mvc;
+using XmasLeds.WebApi.Configuration;
 
 namespace XmasLeds.WebApi.Controllers
 {
     public class SmsController : Controller
     {
         private readonly ILightsService _lightsService;
+        private readonly ISmsSettings _smsSettings;
 
-        public SmsController(ILightsService lightsService)
+        public SmsController(ILightsService lightsService, ISmsSettings smsSettings)
         {
             _lightsService = lightsService;
+            _smsSettings = smsSettings;
         }
 
         [HttpPost]
@@ -29,9 +32,22 @@ namespace XmasLeds.WebApi.Controllers
                 Text = body
             };
 
-            await _lightsService.HandleRequestAsync(request);
+            var lightsResponse = await _lightsService.HandleRequestAsync(request);
 
             var response = new TwilioResponse();
+
+            if (_smsSettings.AllowResponses)
+            {
+                if (lightsResponse.IsScheduled && lightsResponse.ScheduledForUtc.HasValue)
+                {
+                    response.Sms(string.Format("Ooops, you're in a queue! Don't worry, your lights have been scheduled for {0}. Merry Christmas from #157!",
+                        lightsResponse.ScheduledForUtc.Value.ToString("HH:mm")));
+                }
+                else
+                {
+                    response.Sms("Thanks! Your lights will be shown shortly. Merry Christmas from #157!");                    
+                }
+            }
 
             return new TwiMLResult(response);
         }
