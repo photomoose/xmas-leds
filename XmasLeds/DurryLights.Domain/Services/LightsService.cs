@@ -14,6 +14,8 @@ namespace Rumr.DurryLights.Domain.Services
         private readonly IMetricWriter _metricWriter;
         private readonly LightDisplayParser _lightDisplayParser;
         private DateTime _lastRequestUtc;
+        private string _lastRequestUser;
+        private bool _isScheduleActive;
 
         public LightsService(
             IBusPublisher busPublisher, 
@@ -48,29 +50,31 @@ namespace Rumr.DurryLights.Domain.Services
                 return;
             }
 
-            var isScheduled = false;
             var scheduledEnqueueTimeUtc = _lastRequestUtc.AddMinutes(1);
-
-
-            if (now > scheduledEnqueueTimeUtc)
+            
+            if (now > scheduledEnqueueTimeUtc || (request.From == _lastRequestUser && !_isScheduleActive))
             {
-                await _busPublisher.PublishAsync(lightDisplay);
                 _lastRequestUtc = now;
-
+                _isScheduleActive = false;
+                
+                await _busPublisher.PublishAsync(lightDisplay);
             }
             else
             {
-                isScheduled = true;
-                await _busPublisher.PublishAsync(lightDisplay, scheduledEnqueueTimeUtc);
+                _isScheduleActive = true;
                 _lastRequestUtc = scheduledEnqueueTimeUtc;
+
+                await _busPublisher.PublishAsync(lightDisplay, scheduledEnqueueTimeUtc);
             }
+
+            _lastRequestUser = request.From;
 
             metric.IsValidCommand = true;
             metric.DisplayType = lightDisplay.GetType().Name;
             metric.Command = lightDisplay;
-            metric.IsScheduled = isScheduled;
-            metric.ScheduledAtUtc = isScheduled ? (DateTime?) scheduledEnqueueTimeUtc : null;
-            metric.ScheduledDelaySecs = isScheduled ? (double?)(scheduledEnqueueTimeUtc - now).TotalSeconds : null;
+            metric.IsScheduled = _isScheduleActive;
+            metric.ScheduledAtUtc = _isScheduleActive ? (DateTime?) scheduledEnqueueTimeUtc : null;
+            metric.ScheduledDelaySecs = _isScheduleActive ? (double?)(scheduledEnqueueTimeUtc - now).TotalSeconds : null;
 
             await _metricWriter.SendAsync(metric);
         }

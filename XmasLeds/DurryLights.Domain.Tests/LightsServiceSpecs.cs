@@ -137,7 +137,8 @@ namespace DurryLights.Domain.Tests
 
             _busPublisher.Received().PublishAsync(Arg.Is<FlashingLightDisplay>(x =>
                 x.Colours[0] == "ff0000" &&
-                x.Colours[1] == "00ff00"));
+                x.Colours[1] == "00ff00" &&
+                x.Interval == 500));
         }
 
         [Test]
@@ -155,14 +156,16 @@ namespace DurryLights.Domain.Tests
         }
 
         [Test]
-        public async Task Multiple_Requests_Should_Be_Scheduled()
+        public async Task Multiple_Requests_For_Different_Users_Should_Be_Scheduled()
         {
             var request1 = new LightsRequestBuilder()
                 .ForText("red")
+                .From("@photomoose")
                 .Build();
 
             var request2 = new LightsRequestBuilder()
                 .ForText("blue")
+                .From("@durrylights")
                 .Build();
 
             var now = new DateTime(2015, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -174,6 +177,52 @@ namespace DurryLights.Domain.Tests
 
             _busPublisher.Received().PublishAsync(Arg.Is<DefaultLightDisplay>(x =>
                 x.Colours[0] == "0000ff"), scheduledTime);
+        }
+
+        [Test]
+        public async Task Multiple_Requests_For_Same_User_Should_Not_Be_Scheduled()
+        {
+            var request1 = new LightsRequestBuilder()
+                .ForText("red")
+                .From("@photomoose")
+                .Build();
+
+            var request2 = new LightsRequestBuilder()
+                .ForText("blue")
+                .From("@photomoose")
+                .Build();
+
+            await _lightsService.HandleRequestAsync(request1);
+            await _lightsService.HandleRequestAsync(request2);
+
+            _busPublisher.DidNotReceive().PublishAsync(Arg.Is<DefaultLightDisplay>(x =>
+                x.Colours[0] == "0000ff"), Arg.Any<DateTime>());
+        }
+
+        [Test]
+        public async Task Multiple_Requests_For_Same_User_After_Existing_Schedule_Should_Be_Scheduled()
+        {
+            var request1 = new LightsRequestBuilder()
+                .ForText("red")
+                .From("@photomoose")
+                .Build();
+
+            var request2 = new LightsRequestBuilder()
+                .ForText("blue")
+                .From("@rumr")
+                .Build();
+
+            var request3 = new LightsRequestBuilder()
+                .ForText("green")
+                .From("@rumr")
+                .Build();
+
+            await _lightsService.HandleRequestAsync(request1);
+            await _lightsService.HandleRequestAsync(request2);
+            await _lightsService.HandleRequestAsync(request3);
+
+            _busPublisher.Received().PublishAsync(Arg.Is<DefaultLightDisplay>(x =>
+                x.Colours[0] == "00ff00"), Arg.Any<DateTime>());
         }
 
         [Test]
@@ -239,10 +288,12 @@ namespace DurryLights.Domain.Tests
         {
             var request1 = new LightsRequestBuilder()
                 .ForText("red")
+                .From("@photomoose")
                 .Build();
 
             var request2 = new LightsRequestBuilder()
                 .ForText("blue")
+                .From("@durrylights")
                 .Build();
 
             var now = new DateTime(2015, 1, 1, 0, 0, 0, DateTimeKind.Utc);

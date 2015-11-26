@@ -2,5 +2,9 @@
 {
     public class FlashingLightDisplay : LightDisplay
     {
+        public int Interval
+        {
+            get { return 500; }
+        }
     }
 }
