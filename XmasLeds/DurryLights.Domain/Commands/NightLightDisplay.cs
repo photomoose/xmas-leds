@@ -1,10 +1,10 @@
 ﻿namespace Rumr.DurryLights.Domain.Commands
 {
-    public class FlashingLightDisplay : LightDisplay
+    public class NightLightDisplay : LightDisplay
     {
         protected override string Command
         {
-            get { return "F,1000,1000"; }
-        }
+            get { return "D,1200,100,10000"; }
+        }         
     }
 }

@@ -1,4 +1,12 @@
-red,ff0000
-green,00ff00
 blue,0000ff
+cyan,00ffff
+green,00ff00
+indigo,4b0082
+orange,ff1500
+pink,e4007c
+purple,800080
+red,ff0000
+turquoise,40e0d0
+violet,7f00ff
 white,ffffff
+yellow,ff3f00

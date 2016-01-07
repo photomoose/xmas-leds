@@ -40,6 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Cycle2LightDisplay.cs" />
+    <Compile Include="Commands\FadeOutLightDisplay.cs" />
+    <Compile Include="Commands\NightLightDisplay.cs" />
+    <Compile Include="Commands\TwinkleLightDisplay.cs" />
     <Compile Include="IMetricWriter.cs" />
     <Compile Include="Models\LightsResponse.cs" />
     <Compile Include="Models\Metric.cs" />
@@ -48,7 +52,7 @@
     <Compile Include="Utilities\IDateTimeProvider.cs" />
     <Compile Include="Services\ILightsService.cs" />
     <Compile Include="Utilities\LightDisplayFactory.cs" />
-    <Compile Include="Commands\CyclingLightDisplay.cs" />
+    <Compile Include="Commands\Cycle1LightDisplay.cs" />
     <Compile Include="Commands\DefaultLightDisplay.cs" />
     <Compile Include="Commands\FadingInOutLightDisplay.cs" />
     <Compile Include="Commands\FlashingLightDisplay.cs" />

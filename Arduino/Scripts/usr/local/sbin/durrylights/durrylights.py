@@ -11,16 +11,6 @@ import ConfigParser
 from azure.servicebus import ServiceBusService, Rule
 from urllib2 import URLError, HTTPError
 
-def getCommand(messageType):
-	return {
-		'StrobeLightDisplay': 's',
-		'FadingInOutLightDisplay': 'f',
-		'FlashingLightDisplay': 'F',
-		'CyclingLightDisplay': 'c',
-		'DefaultLightDisplay': 'd'
-
-	}[messageType]
-
 LOG_FILENAME = '/var/log/durrylights.log'
 
 # Set up a specific logger with our desired output level
@@ -68,10 +58,7 @@ try:
 
 				logger.info('Received ' + displayType + ': ' + msg.body)
 
-				cmd = json.loads(msg.body)
-
-				path = getCommand(displayType) + ',' + ','.join(cmd["Colours"])
-				url = 'http://localhost/mailbox/' + path
+				url = 'http://localhost/mailbox/' + msg.body
 
 				logger.debug('Mailbox message: ' + str(url))
 				

@@ -36,7 +36,7 @@ namespace XmasLeds.WebApi.Controllers
 
             var response = new TwilioResponse();
 
-            if (_smsSettings.AllowResponses)
+            if (_smsSettings.AllowResponses && lightsResponse.IsSuccess)
             {
                 if (lightsResponse.IsScheduled && lightsResponse.ScheduledForUtc.HasValue)
                 {

@@ -11,6 +11,9 @@ namespace Rumr.DurryLights.Domain.Utilities
                 case "fade":
                     return new FadingInOutLightDisplay();
 
+                case "fadeout":
+                    return new FadeOutLightDisplay();
+
                 case "strobe":
                     return new StrobeLightDisplay();
                     
@@ -18,7 +21,16 @@ namespace Rumr.DurryLights.Domain.Utilities
                     return new FlashingLightDisplay();
 
                 case "cycle":
-                    return new CyclingLightDisplay();
+                    return new Cycle1LightDisplay();
+
+                case "cycle2":
+                    return new Cycle2LightDisplay();
+
+                case "night":
+                    return new NightLightDisplay();
+
+                case "twinkle":
+                    return new TwinkleLightDisplay();
 
                 default:
                     return new DefaultLightDisplay();

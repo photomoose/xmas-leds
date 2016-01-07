@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Rumr.DurryLights.Domain.Commands;
 
 namespace Rumr.DurryLights.Domain.Messaging
 {
@@ -7,8 +8,8 @@ namespace Rumr.DurryLights.Domain.Messaging
     {
         Task InitializeAsync();
 
-        Task PublishAsync<T>(T message);
+        Task PublishAsync(LightDisplay lightDisplay);
 
-        Task PublishAsync<T>(T message, DateTime scheduledEnqueueTimeUtc);
+        Task PublishAsync(LightDisplay lightDisplay, DateTime scheduledEnqueueTimeUtc);
     }
 }

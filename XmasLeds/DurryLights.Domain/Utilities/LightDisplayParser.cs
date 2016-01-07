@@ -36,6 +36,15 @@ namespace Rumr.DurryLights.Domain.Utilities
                 {
                     lightDisplay.AddColour(matchingColour.HexValue);
                 }
+                else
+                {
+                    var match = Regex.Match(word, "^#([0-9a-fA-F]{6})$");
+
+                    if (match.Success)
+                    {
+                        lightDisplay.AddColour(match.Groups[1].Value);
+                    }
+                }
             }
 
             return lightDisplay;
@@ -43,7 +52,7 @@ namespace Rumr.DurryLights.Domain.Utilities
 
         private static IEnumerable<string> SplitWords(string text)
         {
-            text = Regex.Replace(text, "[^a-z ]", string.Empty);
+            text = Regex.Replace(text, "[^a-zA-Z0-9 #]", string.Empty);
 
             var words = Regex.Split(text, "\\s+");
 

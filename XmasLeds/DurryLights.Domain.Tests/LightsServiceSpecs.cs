@@ -73,6 +73,21 @@ namespace DurryLights.Domain.Tests
         }
 
         [Test]
+        public async Task Hex_Values_Should_Be_Published()
+        {
+            var request = new LightsRequestBuilder()
+                .ForText("#cccccc, #101010, #abcdef")
+                .Build();
+
+            await _lightsService.HandleRequestAsync(request);
+
+            _busPublisher.Received().PublishAsync(Arg.Is<DefaultLightDisplay>(x =>
+                x.Colours[0] == "cccccc" &&
+                x.Colours[1] == "101010" &&
+                x.Colours[2] == "abcdef"));
+        }
+
+        [Test]
         public async Task Unknown_Colours_Should_Be_Silently_Ignored()
         {
             var request = new LightsRequestBuilder()
@@ -137,8 +152,7 @@ namespace DurryLights.Domain.Tests
 
             _busPublisher.Received().PublishAsync(Arg.Is<FlashingLightDisplay>(x =>
                 x.Colours[0] == "ff0000" &&
-                x.Colours[1] == "00ff00" &&
-                x.Interval == 500));
+                x.Colours[1] == "00ff00"));
         }
 
         [Test]
@@ -150,7 +164,7 @@ namespace DurryLights.Domain.Tests
 
             await _lightsService.HandleRequestAsync(request);
 
-            _busPublisher.Received().PublishAsync(Arg.Is<CyclingLightDisplay>(x =>
+            _busPublisher.Received().PublishAsync(Arg.Is<Cycle1LightDisplay>(x =>
                 x.Colours[0] == "ff0000" &&
                 x.Colours[1] == "00ff00"));
         }

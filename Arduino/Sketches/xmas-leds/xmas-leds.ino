@@ -2,21 +2,25 @@
 #include <Mailbox.h>
 #include "xmas-leds.h"
 
-float currentR = 0;
-float currentG = 0;
-float currentB = 0;
+int fadeIncrements;
+int fadeIncrementDuration;
+int fadeColourDuration;
+int fadeOffDuration;
+int strobeInterval;
+int strobeColourDuration;
+int cycleColourDuration;
+int flashDurationOn;
+int flashDurationOff;
 
-int increments = 1000;
 bool DEBUG = true;
 int loopCount = 50;
-RGB colours[10];
-RGB prevColour = {0, 0, 0};
+RGB colours[NUM_COLOURS];
 int numColours;
 char programme;
-const char FADE = 'f';
-const char FLASH = 'F';
-const char STROBE = 's';
-const char CYCLE = 'c';
+
+
+const int messagePollFrequency = 5000;
+unsigned long lastMessagePoll;
 
 void setup() {
   Bridge.begin();
@@ -34,65 +38,58 @@ int freeRam () {
 }
 
 void loop() {
-  //Console.println("\n[memCheck]");
-  //Console.println(freeRam());  
-  
-  uint8_t message[128];
-  int i;
 
   if (Mailbox.messageAvailable()) {
     parseMessage();
     turnOffLeds();
-    delay(500);
+    delay(1500);
   }
   
   switch (programme) {
-    case FADE:
-      fadeInOut();
+    case FADEINOUT:
+      fadeInOut(fadeIncrements, fadeIncrementDuration);
+      break;
+      
+    case FADEOUT:
+      fadeOut(fadeColourDuration, fadeOffDuration, fadeIncrements, fadeIncrementDuration);
       break;
       
     case STROBE:
-      strobe();
+      strobe(strobeInterval, strobeColourDuration);
       break;
     
     case CYCLE:
-      cycle();
+      cycle(cycleColourDuration);
       break;
       
     case FLASH:
-      flashAlternate();
+      flashAlternate(flashDurationOn, flashDurationOff);
+      break;
+    
+    case DEFAULTFADE:
+      fadeAlternate(fadeColourDuration, fadeIncrements, fadeIncrementDuration);
       break;
       
     default:  
-      fadeAlternate();  
+      fadeAlternate(3000, 1000, 0);  
   }
 }
 
-void setColour(struct RGB *colour, long value) {
+void initColour(struct RGB *colour, long value) {
   colour->r = (value >> 16) & 0xFF;
   colour->g = (value >> 8) & 0xFF;
   colour->b = value & 0xFF;
 }
 
 void turnOffLeds() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(GREEN_PIN, 0);
-  analogWrite(BLUE_PIN, 0);
-
-  currentR = 0;
-  currentG = 0;
-  currentB = 0;
-
-  prevColour.r = 0;
-  prevColour.g = 0;
-  prevColour.b = 0;
+  setLedColour(BLACK);
 }
 
 void parseMessage() {
-  uint8_t message[128];
+  uint8_t message[MESSAGE_SIZE];
   int i;
 
-  Mailbox.readMessage(message, 128);
+  Mailbox.readMessage(message, MESSAGE_SIZE);
   Console.print("Received message: ");
   Console.println((char *)message);
 
@@ -102,26 +99,63 @@ void parseMessage() {
     programme = token[0];
     Console.print("Programme: ");
     Console.println(programme);
+    
+    if (programme == DEFAULTFADE) {
+      token = strtok(NULL, ",");
+      fadeIncrements = atoi(token);
+      token = strtok(NULL, ",");
+      fadeIncrementDuration = atoi(token);
+      token = strtok(NULL, ",");
+      fadeColourDuration = atoi(token);
+    } else if (programme == FADEINOUT) {
+      token = strtok(NULL, ",");
+      fadeIncrements = atoi(token);
+      token = strtok(NULL, ",");
+      fadeIncrementDuration = atoi(token);
+    } else if (programme == FADEOUT) {
+      token = strtok(NULL, ",");
+      fadeIncrements = atoi(token);
+      token = strtok(NULL, ",");
+      fadeIncrementDuration = atoi(token);   
+      token = strtok(NULL, ",");
+      fadeColourDuration = atoi(token);
+      token = strtok(NULL, ",");
+      fadeOffDuration = atoi(token);      
+    } else if (programme == STROBE) {
+      token = strtok(NULL, ",");
+      strobeInterval = atoi(token);
+      token = strtok(NULL, ",");
+      strobeColourDuration = atoi(token);
+    } else if (programme == CYCLE) {
+      token = strtok(NULL, ",");
+      cycleColourDuration = atoi(token);
+    } else if (programme == FLASH) {
+      token = strtok(NULL, ",");
+      flashDurationOn = atoi(token);
+      token = strtok(NULL, ",");
+      flashDurationOff = atoi(token);   
+    }   
+        
     token = strtok(NULL, ",");
   } else {
     programme = NULL;
   }
   
-  while (token != NULL && i < 10) {
+  while (token != NULL && i < NUM_COLOURS) {
     Console.println(token);
 
     long num = strtol(token, NULL, 16);
-    setColour(&colours[i++], num);
+    initColour(&colours[i++], num);
 
     token = strtok(NULL, ",");
   }
 
   numColours = i;
-  Console.print("Number of items: ");
+  Console.print("Number of colours: ");
   Console.println(numColours);
 }
 
-float calculateFadeSteps(int prevValue, int endValue) {
+float calculateFadeSteps(int prevValue, int endValue, int increments) {
   float diff = endValue - prevValue;
   return diff / (float)increments;
 }
@@ -141,11 +175,11 @@ float calculateVal(float step, float val) {
 
 void printLedStatus() {
   Console.print("LED Status: (");
-  Console.print((int)currentR);
+  Console.print(currentColour.r);
   Console.print(", ");
-  Console.print((int)currentG);
+  Console.print(currentColour.g);
   Console.print(", ");
-  Console.print((int)currentB);
+  Console.print(currentColour.b);
   Console.println(")");
 }
 
@@ -163,156 +197,154 @@ bool shouldPrintFadeStatus(int iteration) {
   return (DEBUG && (iteration == 0 || iteration % loopCount == 0));
 }
 
-void flash() {
-  Console.println("Programme: Flash");
-  
-  for (int i = 0; i < numColours; i++) {
-    for (int j = 0; j < 4; j++) {
-      analogWrite(RED_PIN, colours[i].r);
-      analogWrite(GREEN_PIN, colours[i].g);
-      analogWrite(BLUE_PIN, colours[i].b);
-    
-      delay(1000);
-      
-      analogWrite(RED_PIN, 0);
-      analogWrite(GREEN_PIN, 0);
-      analogWrite(BLUE_PIN, 0);
-      
-      delay(1000);
-    }
-    
-    if (Mailbox.messageAvailable()) {
-      break;
-    }    
-  }  
-}
-
-void fadeInOut() {
+void fadeInOut(int increments, int incrementDuration) {
   Console.println("Programme: Fade In/Out");
-  
-  struct RGB black = {0, 0, 0};
-  
-  analogWrite(RED_PIN, 0);
-  analogWrite(GREEN_PIN, 0);
-  analogWrite(BLUE_PIN, 0);
       
   for (int j = 0; j < numColours; j++) {
-    fade(&colours[j]);
-    fade(&black);
+    fade(&colours[j], increments, incrementDuration);
+   
+    if (isMessageAvailable()) {
+      break;
+    }
+    
+    fade(&BLACK, increments, incrementDuration);
 
-    if (Mailbox.messageAvailable()) {
+    if (isMessageAvailable()) {
       break;
     }
   }  
 }
-void fadeAlternate() {
-  for (int j = 0; j < numColours; j++) {
-    fade(&colours[j]);
-    delay(3000);
 
-    if (Mailbox.messageAvailable()) {
+void fadeOut(int colourDuration, int offDuration, int increments, int incrementDuration) {
+  Console.println("Programme: Fade Out");
+  
+  for (int j = 0; j < numColours; j++) {
+    setLedColour(colours[j]);
+    printLedStatus();
+    delay(colourDuration);
+    
+    fade(&BLACK, increments, incrementDuration);
+    delay(offDuration);
+
+    if (isMessageAvailable()) {
+      break;
+    }
+  }  
+}
+
+void fadeAlternate(int colourDuration, int increments, int incrementDuration) {
+  for (int j = 0; j < numColours; j++) {
+    fade(&colours[j], increments, incrementDuration);
+    delay(colourDuration);
+
+    if (isMessageAvailable()) {
       break;
     }
   }
 }
 
-void flashAlternate() {
+void flashAlternate(int durationOn, int durationOff) {
   Console.println("Programme: Flash Alternate");
   
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < numColours; j++) {
-      analogWrite(RED_PIN, colours[j].r);
-      analogWrite(GREEN_PIN, colours[j].g);
-      analogWrite(BLUE_PIN, colours[j].b);
+  for (int j = 0; j < numColours; j++) {
+    setLedColour(colours[j]);
+  
+    delay(durationOn);
     
-      delay(1000);
-      
-      analogWrite(RED_PIN, 0);
-      analogWrite(GREEN_PIN, 0);
-      analogWrite(BLUE_PIN, 0);
-      
-      delay(1000);
-    }
+    analogWrite(RED_PIN, 0);
+    analogWrite(GREEN_PIN, 0);
+    analogWrite(BLUE_PIN, 0);
     
-    if (Mailbox.messageAvailable()) {
-      break;
-    }    
-  }  
+    delay(durationOff);
+  } 
 }
 
-void cycle() {
+void cycle(int cycleColourDuration) {
   Console.println("Programme: Cycle");
   
-  unsigned long until;
-  until = millis() + 10000;
-  
-  while (millis() < until) {
-    for (int j = 0; j < numColours; j++) {
-      analogWrite(RED_PIN, colours[j].r);
-      analogWrite(GREEN_PIN, colours[j].g);
-      analogWrite(BLUE_PIN, colours[j].b);
+  for (int j = 0; j < numColours; j++) {
+    setLedColour(colours[j]);
     
-      delay(1000);
-    }
+    delay(cycleColourDuration);
     
-    if (Mailbox.messageAvailable()) {
+    if (isMessageAvailable()) {
       break;
     }    
-  }  
+  }
 }
 
-void strobe() {
+void strobe(int interval, int colourDuration) {
   Console.println("Programme: Strobe");
   
   unsigned long until;
     
   for (int j = 0; j < numColours; j++) { 
-   until = millis() + 4000;
+   until = millis() + colourDuration;
    
     while (millis() < until) {
 
-      analogWrite(RED_PIN, colours[j].r);
-      analogWrite(GREEN_PIN, colours[j].g);
-      analogWrite(BLUE_PIN, colours[j].b);
+      setLedColour(colours[j]);
     
-      delay(30);
+      delay(interval);
       
       analogWrite(RED_PIN, 0);
       analogWrite(GREEN_PIN, 0);
       analogWrite(BLUE_PIN, 0);
       
-      delay(30);      
+      delay(interval);      
     }
     
-    if (Mailbox.messageAvailable()) {
+    if (isMessageAvailable()) {
       break;
-    }    
+    } 
   }  
 }
 
-void fade(struct RGB *colour) {
+void fade(struct RGB *colour, int increments, int incrementDuration) {
   printFadeMessage(colour);
 
-  float stepR = calculateFadeSteps((int)prevColour.r, (int)colour->r);
-  float stepG = calculateFadeSteps((int)prevColour.g, (int)colour->g);
-  float stepB = calculateFadeSteps((int)prevColour.b, (int)colour->b);
+  float stepR = calculateFadeSteps(currentColour.r, (int)colour->r, increments);
+  float stepG = calculateFadeSteps(currentColour.g, (int)colour->g, increments);
+  float stepB = calculateFadeSteps(currentColour.b, (int)colour->b, increments);
+
+  float r = currentColour.r;
+  float g = currentColour.g;
+  float b = currentColour.b;
 
   for (int i = 0; i <= increments; i++) {
-    currentR = calculateVal(stepR, currentR);
-    currentG = calculateVal(stepG, currentG);
-    currentB = calculateVal(stepB, currentB);
+    r = calculateVal(stepR, r);
+    g = calculateVal(stepG, g);
+    b = calculateVal(stepB, b);
 
-    analogWrite(RED_PIN, currentR);
-    analogWrite(GREEN_PIN, currentG);
-    analogWrite(BLUE_PIN, currentB);
+    setLedColour({r, g, b});
 
     if (shouldPrintFadeStatus(i)) {
       printLedStatus();
     }
+    
+    if (isMessageAvailable()) {
+      break;
+    }    
+    
+    delay(incrementDuration);
+  }
+}
+
+bool isMessageAvailable() {
+  bool result = false;
+  
+  if (millis() > lastMessagePoll + messagePollFrequency) {
+    result = Mailbox.messageAvailable();
+    lastMessagePoll = millis();
   }
 
-  // Update current values for next loop
-  prevColour.r = currentR;
-  prevColour.g = currentG;
-  prevColour.b = currentB;
+  return result;
+}  
+
+void setLedColour(struct RGB colour) {
+  analogWrite(RED_PIN, colour.r);
+  analogWrite(GREEN_PIN, colour.g);
+  analogWrite(BLUE_PIN, colour.b);
+  
+  currentColour = colour;
 }

@@ -61,22 +61,34 @@ namespace TwitterListener.WebJob
                     var responseContent = await response.Content.ReadAsStringAsync();
                     var lightsResponse = JsonConvert.DeserializeObject<LightsResponse>(responseContent);
 
+                    if (!lightsResponse.IsSuccess)
+                    {
+                        return;
+                    }
+
                     if (lightsResponse.IsScheduled && lightsResponse.ScheduledForUtc.HasValue)
                     {
                         reply = string.Format("Thanks! Your lights have been scheduled for {0}. Merry Christmas!",
                             lightsResponse.ScheduledForUtc.Value.ToString("HH:mm"));
+
+                        Tweet.PublishTweetInReplyTo(string.Format("@{0} {1}", e.Tweet.CreatedBy.ScreenName, reply),
+                            e.Tweet);
                     }
                     else
                     {
                         reply = "Thanks! Your lights will be shown shortly. Merry Christmas!";
+
+                        Tweet.PublishTweetInReplyTo(string.Format("@{0} {1}", e.Tweet.CreatedBy.ScreenName, reply),
+                            e.Tweet);
                     }
                 }
                 else
                 {
                     reply = "Ooops. Something went wrong. Please try again later.";
+
+                    Tweet.PublishTweetInReplyTo(string.Format("@{0} {1}", e.Tweet.CreatedBy.ScreenName, reply), e.Tweet);
                 }
 
-                Tweet.PublishTweetInReplyTo(string.Format("@{0} {1}", e.Tweet.CreatedBy.ScreenName, reply), e.Tweet);
             }
 
         }

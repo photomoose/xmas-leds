@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Newtonsoft.Json;
+using Rumr.DurryLights.Domain.Commands;
 using Rumr.DurryLights.Domain.Messaging;
 
 namespace Rumr.DurryLights.ServiceBus
@@ -32,26 +33,25 @@ namespace Rumr.DurryLights.ServiceBus
             }            
         }
 
-        public async Task PublishAsync<T>(T message)
+        public async Task PublishAsync(LightDisplay lightDisplay)
         {
-            var topicClient = _factory.CreateTopicClient("Commands");
-
-            var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)));
-            var brokeredMessage = new BrokeredMessage(json);
-            brokeredMessage.Properties.Add("MessageType", message.GetType().Name);
-
-            await topicClient.SendAsync(brokeredMessage);
+            await PublishAsync(lightDisplay, DateTime.MinValue);
         }
 
-        public async Task PublishAsync<T>(T message, DateTime scheduledEnqueueTimeUtc)
+        public async Task PublishAsync(LightDisplay lightDisplay, DateTime scheduledEnqueueTimeUtc)
         {
             var topicClient = _factory.CreateTopicClient("Commands");
 
-            var json = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)));
-            var brokeredMessage = new BrokeredMessage(json);
-            brokeredMessage.ScheduledEnqueueTimeUtc = scheduledEnqueueTimeUtc;
-            brokeredMessage.Properties.Add("MessageType", message.GetType().Name);
+            var message = lightDisplay.Serialize();
+            var ms = new MemoryStream(Encoding.UTF8.GetBytes(message));
+            var brokeredMessage = new BrokeredMessage(ms);
+            brokeredMessage.Properties.Add("MessageType", lightDisplay.GetType().Name);
 
+            if (scheduledEnqueueTimeUtc != DateTime.MinValue)
+            {
+                brokeredMessage.ScheduledEnqueueTimeUtc = scheduledEnqueueTimeUtc;
+            }
+            
             await topicClient.SendAsync(brokeredMessage);
         }
     }
